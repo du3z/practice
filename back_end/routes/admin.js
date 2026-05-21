@@ -1,4 +1,3 @@
-// routes/admin.js
 const express = require('express');
 const pool = require('../db/pool');
 const { authenticate, isSuperAdmin } = require('../middleware/auth');
@@ -6,7 +5,6 @@ const bcrypt = require('bcrypt');
 
 const router = express.Router();
 
-// Получить всех пользователей (только супер-админ)
 router.get('/users', authenticate, isSuperAdmin, async (req, res) => {
     try {
         const result = await pool.query(
@@ -19,7 +17,6 @@ router.get('/users', authenticate, isSuperAdmin, async (req, res) => {
     }
 });
 
-// Обновить роль пользователя
 router.put('/users/:id/role', authenticate, isSuperAdmin, async (req, res) => {
     const { id } = req.params;
     const { role } = req.body;
@@ -29,7 +26,6 @@ router.put('/users/:id/role', authenticate, isSuperAdmin, async (req, res) => {
     }
     
     try {
-        // Проверяем, что не меняем супер-админа
         const userCheck = await pool.query(
             'SELECT role FROM users WHERE id = $1',
             [id]
@@ -55,12 +51,10 @@ router.put('/users/:id/role', authenticate, isSuperAdmin, async (req, res) => {
     }
 });
 
-// Удалить пользователя
 router.delete('/users/:id', authenticate, isSuperAdmin, async (req, res) => {
     const { id } = req.params;
     
     try {
-        // Проверяем, что не удаляем супер-админа
         const userCheck = await pool.query(
             'SELECT role FROM users WHERE id = $1',
             [id]
@@ -82,7 +76,6 @@ router.delete('/users/:id', authenticate, isSuperAdmin, async (req, res) => {
     }
 });
 
-// Получить статистику
 router.get('/stats', authenticate, isSuperAdmin, async (req, res) => {
     try {
         const totalUsers = await pool.query('SELECT COUNT(*) FROM users');
