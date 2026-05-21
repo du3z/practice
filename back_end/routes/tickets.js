@@ -1,4 +1,3 @@
-// routes/tickets.js
 const express = require('express');
 const pool = require('../db/pool');
 const { authenticate, isAdmin } = require('../middleware/auth');
@@ -7,7 +6,6 @@ const multer = require('multer');
 const router = express.Router();
 const upload = multer({ limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB
 
-// Получить заявки (для пользователя - свои, для админа - все)
 router.get('/', authenticate, async (req, res) => {
     try {
         let query;
@@ -38,7 +36,6 @@ router.get('/', authenticate, async (req, res) => {
     }
 });
 
-// Создать заявку
 router.post('/', authenticate, upload.single('image'), async (req, res) => {
     const { title, description, image } = req.body;
     
@@ -59,15 +56,13 @@ router.post('/', authenticate, upload.single('image'), async (req, res) => {
         );
         
         const ticket = result.rows[0];
-        
-        // Добавляем первое сообщение
+
         await pool.query(
             `INSERT INTO messages (ticket_id, sender, sender_name, text) 
              VALUES ($1, $2, $3, $4)`,
             [ticket.id, 'user', req.user.username, description]
         );
-        
-        // Получаем полную информацию с ticket_id
+
         const fullTicket = await pool.query(
             'SELECT * FROM tickets WHERE id = $1',
             [ticket.id]
@@ -80,7 +75,6 @@ router.post('/', authenticate, upload.single('image'), async (req, res) => {
     }
 });
 
-// Обновить статус заявки (только админ)
 router.put('/:id/status', authenticate, isAdmin, async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
@@ -107,12 +101,10 @@ router.put('/:id/status', authenticate, isAdmin, async (req, res) => {
     }
 });
 
-// Удалить заявку
 router.delete('/:id', authenticate, async (req, res) => {
     const { id } = req.params;
     
     try {
-        // Проверяем права (админ может удалить любую, пользователь только свою)
         let query;
         let params;
         
@@ -137,12 +129,10 @@ router.delete('/:id', authenticate, async (req, res) => {
     }
 });
 
-// Получить сообщения заявки
 router.get('/:id/messages', authenticate, async (req, res) => {
     const { id } = req.params;
     
     try {
-        // Проверяем доступ к заявке
         let hasAccess = false;
         
         if (req.user.role === 'admin' || req.user.role === 'super_admin') {
