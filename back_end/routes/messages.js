@@ -1,11 +1,9 @@
-// routes/messages.js
 const express = require('express');
 const pool = require('../db/pool');
 const { authenticate, isAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Отправить сообщение
 router.post('/', authenticate, async (req, res) => {
     const { ticketId, text } = req.body;
     
@@ -14,7 +12,6 @@ router.post('/', authenticate, async (req, res) => {
     }
     
     try {
-        // Проверяем доступ к заявке
         let hasAccess = false;
         let ticket;
         
@@ -41,23 +38,19 @@ router.post('/', authenticate, async (req, res) => {
         if (!hasAccess) {
             return res.status(403).json({ error: 'Нет доступа к этой заявке' });
         }
-        
-        // Определяем отправителя
+
         const sender = (req.user.role === 'admin' || req.user.role === 'super_admin') ? 'admin' : 'user';
         const senderName = sender === 'admin' ? 'Техподдержка' : req.user.username;
-        
-        // Добавляем сообщение
+
         await pool.query(
             'INSERT INTO messages (ticket_id, sender, sender_name, text) VALUES ($1, $2, $3, $4)',
             [ticketId, sender, senderName, text.trim()]
         );
-        
-        // Если сообщение от админа, меняем статус is_read
+
         if (sender === 'admin') {
             await pool.query('UPDATE tickets SET is_read = false WHERE id = $1', [ticketId]);
         }
-        
-        // Если статус заявки "Решено" и пользователь пишет - меняем на "В работе"
+
         if (sender === 'user' && ticket.status === 'Решено') {
             await pool.query('UPDATE tickets SET status = $1 WHERE id = $2', ['В работе', ticketId]);
         }
@@ -69,7 +62,6 @@ router.post('/', authenticate, async (req, res) => {
     }
 });
 
-// Отметить заявку как прочитанную
 router.put('/:ticketId/read', authenticate, async (req, res) => {
     const { ticketId } = req.params;
     
