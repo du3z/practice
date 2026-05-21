@@ -1,106 +1,3 @@
-// import { getCurrentUser } from './auth.js';
-
-// export function getTickets() {
-//     return JSON.parse(localStorage.getItem('tickets')) || [];
-// }
-
-// function getNow() {
-//     return new Date().toLocaleString('ru-RU', {
-//         day: '2-digit', month: '2-digit', year: 'numeric',
-//         hour: '2-digit', minute: '2-digit'
-//     });
-// }
-
-// export function addTicket(title, desc, image = null) {
-//     const tickets = getTickets();
-//     const currentUser = getCurrentUser();
-    
-//     if (!currentUser) {
-//         throw new Error('Пользователь не авторизован');
-//     }
-    
-//     const ticketId = 'ID-' + Math.floor(1000 + Math.random() * 9000);
-//     const now = getNow();
-
-//     const newTicket = {
-//         id: ticketId,
-//         userId: currentUser.id,
-//         username: currentUser.username,
-//         title: title.trim(),
-//         status: 'Новая',
-//         isRead: true,
-//         image: image,
-//         date: now,
-//         messages: [{
-//             sender: 'user',
-//             senderName: currentUser.username,
-//             text: desc.trim(),
-//             date: now
-//         }]
-//     };
-
-//     tickets.push(newTicket);
-//     localStorage.setItem('tickets', JSON.stringify(tickets));
-//     return newTicket;
-// }
-
-// export function getUserTickets() {
-//     const tickets = getTickets();
-//     const currentUser = getCurrentUser();
-    
-//     if (!currentUser) return [];
-    
-//     return tickets.filter(ticket => ticket.userId === currentUser.id);
-// }
-
-// export function sendMessage(id, sender, text) {
-//     const tickets = getTickets();
-//     const index = tickets.findIndex(t => t.id === id);
-//     const currentUser = getCurrentUser();
-
-//     if (index !== -1) {
-//         const senderName = sender === 'admin' ? 'Техподдержка' : currentUser?.username;
-        
-//         tickets[index].messages.push({
-//             sender: sender,
-//             senderName: senderName,
-//             text: text.trim(),
-//             date: getNow()
-//         });
-
-//         if (sender === 'admin') {
-//             tickets[index].isRead = false;
-//         } else if (tickets[index].status === 'Решено') {
-//             tickets[index].status = 'В работе';
-//         }
-
-//         localStorage.setItem('tickets', JSON.stringify(tickets));
-//         return true;
-//     }
-//     return false;
-// }
-
-// export function updateTicketStatus(id, newStatus) {
-//     const tickets = getTickets();
-//     const index = tickets.findIndex(t => t.id === id);
-//     if (index !== -1) {
-//         tickets[index].status = newStatus;
-//         localStorage.setItem('tickets', JSON.stringify(tickets));
-//         return true;
-//     }
-//     return false;
-// }
-
-// export function deleteTicket(id) {
-//     const tickets = getTickets();
-//     const filtered = tickets.filter(t => t.id !== id);
-//     localStorage.setItem('tickets', JSON.stringify(filtered));
-//     return true;
-// }
-
-
-// store.js - работа с заявками через API
-
 import { getAuthToken } from './auth.js';
 
 const API_URL = 'http://localhost:5000/api';
@@ -133,10 +30,9 @@ async function apiRequest(endpoint, options = {}) {
 export async function getTickets() {
     try {
         const tickets = await apiRequest('/tickets');
-        // Преобразуем для совместимости с фронтом
         return tickets.map(ticket => ({
             ...ticket,
-            messages: [] // Сообщения загружаются отдельно
+            messages: []
         }));
     } catch (error) {
         console.error('Ошибка получения заявок:', error);
