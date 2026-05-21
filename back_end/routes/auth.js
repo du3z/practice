@@ -1,4 +1,3 @@
-// routes/auth.js
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -7,7 +6,6 @@ const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Регистрация
 router.post('/register', async (req, res) => {
     const { username, email, password } = req.body;
     
@@ -20,7 +18,6 @@ router.post('/register', async (req, res) => {
     }
     
     try {
-        // Проверка существования пользователя
         const existingUser = await pool.query(
             'SELECT id FROM users WHERE username = $1 OR email = $2',
             [username, email]
@@ -29,18 +26,15 @@ router.post('/register', async (req, res) => {
         if (existingUser.rows.length > 0) {
             return res.status(400).json({ error: 'Пользователь с таким именем или email уже существует' });
         }
-        
-        // Определяем роль (первый пользователь - супер-админ)
+
         const userCount = await pool.query('SELECT COUNT(*) FROM users');
         let role = 'user';
         if (parseInt(userCount.rows[0].count) === 0) {
             role = 'super_admin';
         }
-        
-        // Хеширование пароля
+
         const passwordHash = await bcrypt.hash(password, 10);
-        
-        // Создание пользователя
+
         const result = await pool.query(
             'INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id, username, email, role',
             [username, email, passwordHash, role]
@@ -54,7 +48,6 @@ router.post('/register', async (req, res) => {
     }
 });
 
-// Логин
 router.post('/login', async (req, res) => {
     const { usernameOrEmail, password } = req.body;
     
@@ -74,8 +67,7 @@ router.post('/login', async (req, res) => {
         if (!validPassword) {
             return res.status(401).json({ error: 'Неверное имя пользователя/email или пароль' });
         }
-        
-        // Создание JWT токена
+
         const token = jwt.sign(
             { userId: user.id, username: user.username, role: user.role },
             process.env.JWT_SECRET,
@@ -98,7 +90,6 @@ router.post('/login', async (req, res) => {
     }
 });
 
-// Получение текущего пользователя
 router.get('/me', authenticate, async (req, res) => {
     res.json({ user: req.user });
 });
